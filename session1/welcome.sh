@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Hello my name is Miguel and I like football"
+echo "This is our welcome.sh script for the first lab session!"
 echo "Group members:"
 echo " Miguel Lopez Delgado"
 echo "David Pujol Ortega"
