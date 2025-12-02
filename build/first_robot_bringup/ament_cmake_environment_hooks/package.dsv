@@ -1,4 +1,0 @@
-source;share/first_robot_bringup/local_setup.bash
-source;share/first_robot_bringup/local_setup.dsv
-source;share/first_robot_bringup/local_setup.sh
-source;share/first_robot_bringup/local_setup.zsh
