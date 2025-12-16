@@ -1,96 +1,82 @@
-# IR-2025-g15-miguel-david
-# Intelligent Robotics 2025 - Group 15 Repository
+# Autonomous Rover Navigation - project_py_pkg
 
-Welcome to the repository for the **Intelligent Robotics 2025** course (UPC-EEBE). This repository documents our progress through the lab sessions, covering everything from basic Linux tools to advanced ROS 2 simulation with sensors.
+**Intelligent Robotics 2025 | Group 15**
+**Authors:** Miguel & David
 
-## 📄 Repository Description
+## Package Description
 
-This repository contains all the coursework, source code, and configuration files developed during the practical sessions. The project focuses on building a differential drive robot simulation from scratch using **ROS 2 (Humble)**, **URDF**, **RViz**, and **Gazebo**.
+This ROS 2 package (`project_py_pkg`) contains the core autonomous navigation logic for our 6-wheeled differential drive rover. The main node, `project_first_node.py`, processes 2D LiDAR data to navigate corridors, centering the robot between walls and performing reactive obstacle avoidance.
 
-**Session 1:** Introduction to the development environment, Linux terminal mastery, Bash scripting, and Git/GitHub workflow.
-**Session 2:** designing the robot's morphology using URDF and visualizing it in RViz.
-**Session 3:** Organizing ROS 2 packages, creating launch files, and simulating the robot's physics and movement in Gazebo.
-**Session 4:** Developing ROS 2 nodes (Publishers/Subscribers) with Python and integrating perception sensors (LiDAR and IMU) into the simulation.
+## Project Structure
 
-## 📂 Repository Structure
+Based on the current package configuration:
 
+```text
+project_py_pkg/
+├── project_py_pkg/
+│   ├── __init__.py
+│   └── project_first_node.py      # Main Autonomous Logic
+├── resource/
+├── test/
+├── package.xml
+├── setup.cfg
+├── setup.py
+└── README.md
 ```
-ir_ws/
-├── src/
-│   ├── session1/                # Intro to Linux & Git
-│   │   ├── welcome.sh           # Bash script for workspace greeting
-│   │   └── robot_sensors.py     # Python script simulating ultrasonic sensors
-│   │
-│   ├── session2/                # URDF Modeling
-│   │   └── first_robot.urdf     # Basic differential robot description
-│   │
-│   ├── session3/                    # ROS 2 Packages & Gazebo Simulation
-│   │   ├── first_robot_description/ # Package containing URDF, meshes, and RViz config
-│   │   │   ├── launch/              # Launch files for description
-│   │   │   ├── rviz/                # RViz configuration files
-│   │   │   └── urdf/                # Enhanced URDF with physics (inertias/collisions)
-│   │   └── first_robot_bringup/     # Package for launching the complete simulation
-│   │       └── launch/              # Main launch file for Gazebo + RViz
-│   │
-│   └── session4/                # ROS 2 Nodes & Sensors
-│       ├── my_py_pkg/           # Basic Python nodes learning package
-│       └── lidar_app/           # Exercise 1: Sensor simulation app
-│           ├── lidar_publisher.py       # Node publishing simulated sensor data
-│           └── decision_subscriber.py   # Node making decisions based on data
-│
-└── README.md                    # Project documentation
-```
-## How to Run the Code
+## Algorithm Implementation & Design Choices
 
-### Session 1: Linux & Python Scripts
+### 1. Implementation: How it Works
+The autonomous navigation logic is implemented in the `ProjectFirstNode` class using **Python** and **ROS 2**. The system operates as a reactive controller that processes raw 2D LiDAR data to make real-time decisions. The workflow consists of three main stages:
 
-**1. Run the Bash Script:**
-Navigate to the folder and execute the welcome script (ensure it has execution permissions `chmod +x`):
-```
-cd src/session1
-./welcome.sh
-```
+#### **A. Sensor Pre-processing (The "Virtual Wall")**
+Raw data from the `/scan` topic is filtered to ensure stability.
+* **Sectoring:** The 360° LaserScan is divided into three critical sectors: **Front**, **Left**, and **Right**.
+* **Clamping Mechanism:** To prevent the robot from reacting violently to distant open spaces (such as large intersections), we apply a saturation filter. Any distance reading greater than **1.5 meters** is capped (clamped) at 1.5m. This creates a "virtual corridor," forcing the robot to focus only on immediate obstacles and walls.
 
-**2. Run the Python Sensor Simulation:**
-Execute the Python script that simulates the sensors:
-```
-python3 robot_sensors.py
-```
+#### **B. Finite State Machine (Control Logic)**
+The robot switches between two discrete states based on the `Front` distance reading:
 
-### Session 2: Launching the URDF
+* **State 1: Cruise & Center (PID Control)**
+    * *Condition:* `Front Distance >= 0.65m`.
+    * *Action:* The robot moves forward at a constant cruise speed (`0.25 m/s`). Simultaneously, a **PD Controller** continuously adjusts the angular velocity (`z`) to keep the robot centered.
+    * *Logic:* It minimizes the error: `Error = Left_Distance - Right_Distance`.
 
-To visualize the basic robot model created in Session 2 (visual geometry only) using the `urdf_tutorial` tools:
+* **State 2: Emergency Stop & Pivot**
+    * *Condition:* `Front Distance < 0.65m`.
+    * *Action:* The forward motion stops immediately. The robot evaluates the `Left` vs. `Right` average distances and performs a **Zero-Radius Turn** (spinning in place) towards the side with more available space.
 
-```
-ros2 launch urdf_tutorial display.launch.py model:=src/session2/first_robot.urdf
-```
+---
 
-### Session 3: RViz and Gazebo Simulation
+### 2. Justification of Main Design Choices
 
-**1. Visualizing in RViz:**
-Launch the description package to see the model with valid physics properties in RViz:
-```
-ros2 launch first_robot_description display.launch.py
-```
+#### **Why a PD Controller? (Kp=0.6, Kd=0.8)**
+We selected a **Proportional-Derivative (PD)** controller instead of a simple Proportional (P) controller to achieve smoother navigation.
+* **Kp = 0.6:** Provides enough reactivity to pull the robot away from walls quickly.
+* **Kd = 0.8:** Acts as a "damper." Without the derivative term, the robot would oscillate (snake) down the corridor. The `Kd` term anticipates the error change and smooths out the steering commands.
+* **Ki = 0.0:** The Integral term was intentionally set to zero. In corridor centering, steady-state error is rarely a major issue, and an integral term could introduce dangerous "windup" (overshooting) at corners.
 
-**2. Launching Simulation in Gazebo:**
-Launch the physics simulator (Gazebo) along with RViz to spawn the robot:
-```
-ros2 launch first_robot_bringup fisrt_robot.launch.py
-```
-To control the robot, run `ros2 run teleop_twist_keyboard teleop_twist_keyboard` in a separate terminal.
+#### **Why "Clamping" sensor values?**
+In early tests, the robot would detect open doors or hallways 5+ meters away and aggressively steer towards them, causing instability. By limiting the "vision" to 1.5m, the robot ignores distant distractions and maintains a much more stable path in the center of the physical corridor.
 
-### Session 4: Nodes & Sensors
+#### **Why Open-Loop Turning?**
+When an obstacle is detected directly in front, PID control is insufficient. We implemented a discrete "Stop & Turn" state because it is safer. By stopping `linear.x` completely, we utilize the robot's differential drive capability to spin without moving forward, eliminating the risk of clipping the wall during the turn.
 
-**1. Exercise 1: Publisher and Subscriber Nodes**
-You need two terminals to run the application that simulates decision-making based on distance sensors.
+---
 
-*Terminal 1 (Publisher):*
-```
-ros2 run lidar_app lidar_publisher
+### 3. Build & Run Instructions
+
+To compile the project and run the autonomous navigation node, follow these steps in your ROS 2 workspace:
+
+#### **Step 1: Build the Package**
+Open Gazebo choosing the maze that you want (1, 2 or 3)
+```bash
+ros2 launch osr_bringup maze_simulation.launch.py maze:=maze_1.world
 ```
 
-*Terminal 2 (Subscriber):*
-```
-ros2 run lidar_app decision_subscriber
-```
+#### **Step 2: Build the Package**
+Compile the specific package to ensure changes are applied, and run the node:
+```bash
+cd ~/ir_ws  # Navigate to your workspace root
+colcon build 
+source ~/.bashrc
+ros2 run project_py_pkg project_first_node
