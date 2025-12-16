@@ -80,3 +80,10 @@ cd ~/ir_ws  # Navigate to your workspace root
 colcon build 
 source ~/.bashrc
 ros2 run project_py_pkg project_first_node
+```
+
+## Conclusions
+
+We are very satisfied with the final autonomous navigation solution we developed. The combination of a Finite State Machine for decision-making and a PD Controller for corridor centering has proven to be a robust strategy. The robot successfully navigates the environment, reacts correctly to walls, and avoids collisions autonomously.
+
+However, there is still room for optimization. While the system is reliable, we would have liked to achieve a **higher cruising speed** while maintaining the same level of **stability**. During our testing, we observed that increasing the velocity often introduced oscillations that were difficult to dampen with the current controller tuning. Consequently, we prioritized safety and smoothness over raw speed for this final version. For instance, we think that only one group being able to run Gazebo at once made the project more dificult than initially thought.
