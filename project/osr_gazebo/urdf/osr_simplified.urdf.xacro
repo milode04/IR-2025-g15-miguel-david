@@ -542,5 +542,60 @@
         <child link="laser_frame" /> 
         <origin xyz="0.09 0 0.08" rpy="0 0 0" />
     </joint>
+    <gazebo reference="base_link">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+
+    <gazebo reference="laser_frame">
+        <material>Gazebo/DarkBlue</material>
+    </gazebo>
+    
+    <gazebo reference="imu_link">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="front_wheel_link_left">
+        <material>Gazebo/Black</material>
+    </gazebo>
+    <gazebo reference="middle_wheel_link_left">
+        <material>Gazebo/Black</material>
+    </gazebo>
+    <gazebo reference="rear_wheel_link_left">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="front_wheel_link_right">
+        <material>Gazebo/Black</material>
+    </gazebo>
+    <gazebo reference="middle_wheel_link_right">
+        <material>Gazebo/Black</material>
+    </gazebo>
+    <gazebo reference="rear_wheel_link_right">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <gazebo reference="box_rotate">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+    
+    <gazebo reference="arm_rotate_L">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+    <gazebo reference="arm_rotate_R">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="rocker_bogie_link_L_1">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+    <gazebo reference="rocker_bogie_link_L_2">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+    <gazebo reference="rocker_bogie_link_R_1">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+    <gazebo reference="rocker_bogie_link_R_2">
+        <material>Gazebo/Grey</material>
+    </gazebo>
 
 </robot>

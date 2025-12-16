@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
         "project_first_node = project_py_pkg.project_first_node:main",
-        "number_publisher = project_py_pkg.number_publisher:main",
         ],
     },
 )
